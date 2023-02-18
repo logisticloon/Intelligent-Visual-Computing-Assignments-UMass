@@ -75,15 +75,57 @@ def mlsReconstruction(points, normals, X, Y, Z):
     # <================START CODE<================>
     ################################################
      
+    ##Calculating estimate of beta using KDTree
+    
+    Q = np.array([X.reshape(-1), Y.reshape(-1), Z.reshape(-1)]).transpose()
+    print(Q.shape, points.shape)
+    tree = KDTree(points)
+    _, idx = tree.query(points, k=2)
+    beta = 2*np.mean(_[:,1:].reshape(-1))
+    ### beta estimate complete
+
+
     # replace this random implicit function with your MLS implementation!
     IF = np.random.rand(X.shape[0], X.shape[1], X.shape[2]) - 0.5
+
+
+    shapeX = X.shape    
+    Q = np.array([X.reshape(-1), Y.reshape(-1), Z.reshape(-1)]).transpose()
+    # print(Q.shape)
+    # print("**********",Q.shape)
+    # print(X,Q)
+    tree = KDTree(points)
+
+    _, idx = tree.query(Q, k=50)  
+    # print(idx,idx.reshape(shapeX))
+    idxs = idx.reshape(shapeX[0],shapeX[1],shapeX[2],-1)
+    print(idxs)
+    for _ in range(len(idxs)):
+        for __ in range(len(idxs)):
+            for ___ in range(len(idxs)):
+                x = X[_][__][___]
+                y = Y[_][__][___]
+                z = Z[_][__][___]
+                p = [x,y,z]
+                idxt = idxs[_][__][___]
+                runningPhi = 0.0
+                runningNumerator = 0.0
+                for iddx in idxt:
+                    p_i = points[iddx]
+                    tv = np.linalg.norm(p-p_i)
+                    d_ip = tv*(normals[iddx]@(p-p_i))
+                    phi_ip = np.exp(-(tv*tv)/(beta*beta))
+                    runningPhi += phi_ip
+                    runningNumerator += phi_ip*d_ip
+                IF[_][__][___] = runningNumerator/runningPhi
+
 
     # this is an example of a kd-tree nearest neighbor search (adapt it accordingly for your task)
 	# use kd-trees to find nearest neighbors efficiently!
 	# kd-tree: https://en.wikipedia.org/wiki/K-d_tree
-    Q = np.array([X.reshape(-1), Y.reshape(-1), Z.reshape(-1)]).transpose()
-    tree = KDTree(points)
-    _, idx = tree.query(Q, k=2)  
+    # Q = np.array([X.reshape(-1), Y.reshape(-1), Z.reshape(-1)]).transpose()
+    # tree = KDTree(points)
+    # _, idx = tree.query(Q, k=2)  
 	
 
     ################################################
@@ -200,7 +242,7 @@ if __name__ == '__main__':
     normals = data[:, 3:6]
 
     # create grid whose vertices will be used to sample the implicit function
-    X,Y,Z,max_dimensions,min_dimensions = createGrid(points, 160)
+    X,Y,Z,max_dimensions,min_dimensions = createGrid(points, 32)
 
     if args.method == 'mls':
         print(f'Running Moving Least Squares reconstruction on {args.file}')
