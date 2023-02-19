@@ -82,6 +82,7 @@ def mlsReconstruction(points, normals, X, Y, Z):
     tree = KDTree(points)
     _, idx = tree.query(points, k=2)
     beta = 2*np.mean(_[:,1:].reshape(-1))
+    print("beta------>)",beta)
     ### beta estimate complete
 
 
@@ -210,6 +211,7 @@ def naiveReconstruction(points, normals, X, Y, Z):
                 idxt = idxs[_][__][___]
                 point = points[idxt]
                 tv = np.linalg.norm(p-point)
+                tv =1 
                 IF[_][__][___] = tv*(normals[idxt]@(p-point))
 
 
@@ -242,7 +244,7 @@ if __name__ == '__main__':
     normals = data[:, 3:6]
 
     # create grid whose vertices will be used to sample the implicit function
-    X,Y,Z,max_dimensions,min_dimensions = createGrid(points, 32)
+    X,Y,Z,max_dimensions,min_dimensions = createGrid(points, 64)
 
     if args.method == 'mls':
         print(f'Running Moving Least Squares reconstruction on {args.file}')
