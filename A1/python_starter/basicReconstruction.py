@@ -92,6 +92,7 @@ def mlsReconstruction(points, normals, X, Y, Z):
     _, idx = tree.query(points, k=2)
     beta = 2*np.mean(_[:, 1:].reshape(-1))
     # beta estimate complete
+    print(f"Print beta for Aniket! beta = {beta}")
 
     # replace this random implicit function with your MLS implementation!
     IF = np.random.rand(X.shape[0], X.shape[1], X.shape[2]) - 0.5

@@ -1,0 +1,7 @@
+/A2/python_starter_code/dataset/
+/A2/python_starter_code/__pycache__
+/A2/dataset/
+*.gz
+A2/python_starter_code/model/
+# *.png
+# __pycache__/

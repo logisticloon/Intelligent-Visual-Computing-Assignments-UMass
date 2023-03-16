@@ -1,0 +1,1 @@
+Doubt1 - Why do we want to minimize product of probabilites and not sum? 28/02/2023
