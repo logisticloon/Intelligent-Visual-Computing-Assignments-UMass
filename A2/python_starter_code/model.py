@@ -41,7 +41,7 @@ class CNN(nn.Module):
 
 
         # change this obviously!
-        self.naive = nn.Conv2d(in_channels=1, out_channels=num_classes, kernel_size=112, stride=1, padding=0, bias=True)
+        # self.naive = nn.Conv2d(in_channels=1, out_channels=num_classes, kernel_size=112, stride=1, padding=0, bias=True)
         
     def forward(self, x):
         """
@@ -49,13 +49,9 @@ class CNN(nn.Module):
         DEFINE YOUR FORWARD PASS HERE
 
         """
-        # print(x.shape)
-        # out = self.layer1(x)
-        # print(out.shape)
-        # change this obviously!
+       
         out = self.maxPooling1(self.leakyReLU1(self.norm1(self.layer1(x))))
         
-        ###Next big chunk
         seq2 = nn.Sequential(
             self.deepConv,
             self.norm2,
@@ -65,7 +61,6 @@ class CNN(nn.Module):
         )
         out = seq2(out)
 
-        ### Third big chunk
         seq3 = nn.Sequential(
             self.deepConv2,
             self.norm3,
@@ -76,10 +71,7 @@ class CNN(nn.Module):
         out = seq3(out)
         out = self.fullyConnectedConv(out)
 
-        # print(out.shape)
-
-        # out = self.naive(x)
-        # print(out.shape)
+        
 
 
         
