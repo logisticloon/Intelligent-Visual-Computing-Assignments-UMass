@@ -50,7 +50,15 @@ def testMVImageClassifier(dataset_path, model, info, pooling = 'mean', cuda=Fals
                >> pooling = 'mean' or pooling = 'max'
             
              '''
+            
             predicted_label = 0 # obviously change this
+            if pooling == "max":
+                predicted_label = np.argmax(np.max(scores,axis=0))
+            else:
+                predicted_label = np.argmax(np.mean(scores,axis=0))
+
+
+
             if predicted_label != idx:
                 test_err += 1
 

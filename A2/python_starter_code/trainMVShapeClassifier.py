@@ -32,7 +32,7 @@ def trainMVShapeClassifier(dataset_path, cuda=False, verbose=False):
 
     # Read all PNG images and their category information, and save them in numpy matrix.
     # (could be commented out after first run
-    # save_data(dataset_path)
+    save_data(dataset_path)
 
     # Load saved numpy matrix
     data, info = load_data()
