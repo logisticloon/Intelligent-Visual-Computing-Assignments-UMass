@@ -165,36 +165,44 @@ def NTcrossentropy(vtx_feature, pts_feature, corr, tau=0.01):
     # prod = torch.randn( corr_vtx_feature.size(0), pts_feature.size(0), requires_grad=True ).to(device)
     # label = corr[:, 1]
     # loss = cross_entropy_loss(prod, label)
-    pts_feature /= tau
+    labels = corr[:, 1]
     cross_entropy_loss = torch.nn.CrossEntropyLoss(reduction='mean')    
-    numerator = torch.mm(vtx_feature, pts_feature.T)
-    values = numerator[corr[:, 0]]
-    label = corr[:, 1]
+    pts_feature_divided = pts_feature/tau
+    pts_feature_transp = pts_feature_divided.T
+    # numerator = torch.mm(vtx_feature, pts_feature_transp)[corr[:, 0]]
+    # values = numerator[corr[:, 0]]
+    preds = torch.mm(vtx_feature, pts_feature_transp)[corr[:, 0]]
 
-    loss = cross_entropy_loss(values, label)
+    loss = cross_entropy_loss(preds, labels)
     return loss
 
 # function to estimate a rotation matrix to align the vertices and the points based on the predicted reliable correspondences.
 # **** YOU SHOULD CHANGE THIS FUNCTION ****
 def fit_rotation(vtx, pts, vtx_feature, pts_feature, corrmask):
     # R = Rotation.from_matrix([[0,-1,0], [1, 0, 0], [0, 0, 1]])
-    mask = torch.where(corrmask > 0.5)
-    vtx = vtx[mask]
-    vtx_feature = vtx_feature[mask]
-    feature_similarity = torch.mm(vtx_feature, pts_feature.transpose(0, 1))
-    
-    _, indices = torch.max(feature_similarity, dim=1)
-    pts = pts[indices]
 
-    vtx = vtx - vtx.mean(dim=0)
+    condition = torch.where(corrmask > 0.5)
+    # mask = torch.where(corrmask > 0.5)
+    # vtx = vtx[mask]
+    # vtx_feature = vtx_feature[mask]
+
+    vtx_feature_cond = vtx_feature[condition]
+    vtx_cond = vtx[condition]
+
+    simMeasure = torch.mm(vtx_feature_cond, pts_feature.transpose(0, 1))
+    
+    eveals, idxs = torch.max(simMeasure, dim=1)
+    pts = pts[idxs]
+
+    vtx_cond = vtx_cond - vtx_cond.mean(dim=0)
     pts = pts - pts.mean(dim=0)
 
-    covariance_matrix = torch.mm(pts.T, vtx)
-    u, _, vt = torch.linalg.svd(covariance_matrix)
+    mtr = torch.mm(pts.T, vtx_cond)
+    aa, bb, cc = torch.linalg.svd(mtr)
 
-    rotMat = torch.mm(u, vt)
-    rotMat = rotMat.detach().cpu().numpy()
-    R = Rotation.from_matrix(rotMat)
+    temp = torch.mm(aa, cc).detach().cpu().numpy()
+    # rotMat = rotMat.detach().cpu().numpy()
+    R = Rotation.from_matrix(temp)
     return R.as_quat()
     # keep the following line, transform the estimated to rotation matrix to a quaternion
     # the starter code handles the rest
@@ -298,7 +306,7 @@ if __name__ == "__main__":
     parser.add_argument("--lr", default=1e-2, type=float, help="Initial learning rate")
     parser.add_argument("--train_batch", default=8, type=int, help="Batch size for training")
     parser.add_argument("--train_corrmask", action="store_true", help="Train also the correspondence mask branch")    
-    parser.add_argument("--tau_nce", default=0.01, type=float, help="Parameter used in the temperature-scaled cross entropy loss")
+    parser.add_argument("--tau_nce", default=0.07, type=float, help="Parameter used in the temperature-scaled cross entropy loss")
 
  # various options for testing and evaluation
     parser.add_argument("--save_results", default=True, action="store_true", help="Save results during testing - useful for visualization")     

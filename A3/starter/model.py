@@ -37,26 +37,23 @@ class PointNet(torch.nn.Module):
         super(PointNet, self).__init__()
         # self.mlp = MLP([num_input_features, num_output_features])
         self.fullyConnectedLayer1 = MLP([num_input_features, 32, 64, 128])
-        self.mlp2 = MLP([128, 128])
-        self.mlp3 = MLP([256, 128, 64])
+        self.fullyConnectedLayer2 = MLP([128, 128])
+        self.fullyConnectedLayer3 = MLP([256, 128, 64])
         self.linear = Lin(64, num_output_features)
 
     def forward(self, x):
-        # x = self.mlp(x)
-        f = self.fullyConnectedLayer1(x)
-        h = self.mlp2(f)
-        # print(h)
-        h = h.unsqueeze(0)
-        maxPool = MaxPool2d((list(h.size())[1], 1), stride=1)
-        g = maxPool(h)
-        g = g.squeeze(0)
-        h = h.squeeze(0)
 
-        g = g.repeat(list(h.size())[0], 1)
-        gf = torch.cat((g, f), -1)
-        out = self.mlp3(gf)
-        x = self.linear(out)
-        return x
+
+        firstOut = self.fullyConnectedLayer2(self.fullyConnectedLayer1(x)).unsqueeze(0)
+        tempDimension = firstOut.size()[1]
+        mp = MaxPool2d((tempDimension, 1), stride=1)
+        maxpooledFirstout = mp(firstOut).squeeze(0)
+        firstOut = firstOut.squeeze(0)
+        tempDimension = firstOut.size()[0]
+        maxpooledFirstout = maxpooledFirstout.repeat(tempDimension, 1)
+        newTensor = torch.cat((maxpooledFirstout, firstOut), -1)
+        out = self.linear(self.fullyConnectedLayer3(newTensor))
+        return out
 
 
 # CorrNet module that serves 2 purposes:  
@@ -83,30 +80,26 @@ class CorrNet(torch.nn.Module):
         super(CorrNet, self).__init__()
         self.train_corrmask = train_corrmask
         self.pointnet_share = PointNet(3, num_output_features)
-        self.mlp4 = MLP([2*num_output_features+1, 64])
-        self.linear2 = Lin(64, 1)
-        # self.mlp = MLP([3, 1]) # you won't use this, delete it, this is there just for the code to run
+        self.fullyConnectedLayer1 = MLP([2*num_output_features+1, 64])
+        self.linearLayer = Lin(64, 1)
 
     def forward(self, vtx, pts):
-        y_vtx = self.pointnet_share(vtx)
-        y_pts = self.pointnet_share(pts)
 
-        out_vtx = torch.nn.functional.normalize(y_vtx, dim=1)
-        out_pts = torch.nn.functional.normalize(y_pts, dim=1)
+        out_vtx = torch.nn.functional.normalize(self.pointnet_share(vtx), dim=1)
+        out_pts = torch.nn.functional.normalize(self.pointnet_share(pts), dim=1)
 
         if self.train_corrmask:            
             # similarity_mat = CosineSimilarity(-1)(out_vtx.unsqueeze(1), out_pts.unsqueeze(0))
             # s, sIndices = torch.max(similarity_mat, -1)
-            similarity_mat = torch.matmul(out_vtx, torch.transpose(out_pts, 0, 1))
-            s, sIndices = torch.max(similarity_mat, 1)
-            x = out_pts[sIndices]
+            cosSimMat = torch.matmul(out_vtx, torch.transpose(out_pts, 0, 1))
+            svals, idxs = torch.max(cosSimMat, 1)
+            svals = svals.unsqueeze(1)
+            opts = out_pts[idxs]
             # print(x)
 
-            s = s.unsqueeze(1)
-            out1 = torch.cat((out_vtx, x, s), dim=-1)
-            out2 = self.mlp4(out1)
+            eval1 = self.fullyConnectedLayer1(torch.cat((out_vtx, opts, svals), dim=-1))
 
-            out_corrmask = self.linear2(out2)
+            out_corrmask = self.linearLayer(eval1)
             # print(out_corrmask)
 
         else:
