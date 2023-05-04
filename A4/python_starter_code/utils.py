@@ -99,8 +99,17 @@ class SdfDataset(data.Dataset):
                 # a Gaussian distribution described in the assignment page.
                 # For validation set, just do this sampling process for one time.
                 # For training set, do this sampling process per each iteration (see code in __getitem__).
-                self.samples_sdf = np.random.random(size=(self.points.shape[0], 1))
-                self.samples_xyz = self.points + np.random.random(size=(self.points.shape[0], 3))
+                # self.samples_sdf = np.random.random(size=(self.points.shape[0], 1))
+                # self.samples_xyz = self.points + np.random.random(size=(self.points.shape[0], 3))
+                b = self.points.shape[0]
+                self.samples_sdf = np.random.normal(0,0.05,size=(100*b, 1))
+                # self.samples_sdf = np.tile(self.samples_sdf,b)
+                # self.samples_sdf = np.reshape(self.samples_sdf,(-1,1))
+                epsilonmat = np.tile(self.samples_sdf,3)
+                self.samples_xyz = np.tile(self.points,(100,1))
+                normals_stacked = np.tile(self.normals,(100,1))
+                self.samples_xyz = self.samples_xyz + (normals_stacked*epsilonmat)
+
                 # ***********************************************************************
 
     def __len__(self):
@@ -118,8 +127,26 @@ class SdfDataset(data.Dataset):
             # Sample random points around surface point along the normal direction based on
             # a Gaussian distribution described in the assignment page.
             # For training set, do this sampling process per each iteration.
-            gt_sdf = np.random.random(size=(self.points.shape[0], 1))
-            xyz = self.points + np.random.random(size=(self.points.shape[0], 3))
+            # gt_sdf = np.random.random(size=(self.points.shape[0], 1))
+            # xyz = self.points + np.random.random(size=(self.points.shape[0], 3))
+
+
+            
+            normals = self.normals
+            xyz = self.points
+            # xyz = self.points[start_idx:end_idx, :]
+            # normals = self.normals[start_idx:end_idx, :]
+            b = xyz.shape[0]
+            gt_sdf = np.random.normal(0,0.05,size=(b, 1))
+            # gt_sdf = np.tile(gt_sdf,b)
+            # gt_sdf = np.reshape(gt_sdf,(-1,1))
+            epsilonmat = np.tile(gt_sdf,3)
+            xyz = np.tile(xyz,(1,1))
+            normals_stacked = np.tile(normals,(1,1))
+            xyz = xyz + (normals_stacked*epsilonmat)
+            indices =  np.random.choice(self.number_points, min(this_bs,self.number_points), replace=False)  
+            xyz = xyz[indices]
+            gt_sdf = gt_sdf[indices]
             # ***********************************************************************
 
         else:
