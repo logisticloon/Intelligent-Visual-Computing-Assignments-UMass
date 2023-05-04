@@ -130,10 +130,10 @@ class SdfDataset(data.Dataset):
             normals = self.normals
             xyz = self.points
             b = xyz.shape[0]
-            gt_sdf = np.random.normal(0,0.05,size=(b, 1))
+            gt_sdf = np.random.normal(0,0.05,size=(100*b, 1))
             epsilonmat = np.tile(gt_sdf,3)
-            xyz = np.tile(xyz,(1,1))
-            normals_stacked = np.tile(normals,(1,1))
+            xyz = np.tile(xyz,(100,1))
+            normals_stacked = np.tile(normals,(100,1))
             xyz = xyz + (normals_stacked*epsilonmat)
             indices =  np.random.choice(self.number_points, min(this_bs,self.number_points), replace=False)  
             xyz = xyz[indices]
