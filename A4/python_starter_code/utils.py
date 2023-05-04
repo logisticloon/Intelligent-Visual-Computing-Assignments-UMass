@@ -103,8 +103,6 @@ class SdfDataset(data.Dataset):
                 # self.samples_xyz = self.points + np.random.random(size=(self.points.shape[0], 3))
                 b = self.points.shape[0]
                 self.samples_sdf = np.random.normal(0,0.05,size=(100*b, 1))
-                # self.samples_sdf = np.tile(self.samples_sdf,b)
-                # self.samples_sdf = np.reshape(self.samples_sdf,(-1,1))
                 epsilonmat = np.tile(self.samples_sdf,3)
                 self.samples_xyz = np.tile(self.points,(100,1))
                 normals_stacked = np.tile(self.normals,(100,1))
@@ -129,17 +127,10 @@ class SdfDataset(data.Dataset):
             # For training set, do this sampling process per each iteration.
             # gt_sdf = np.random.random(size=(self.points.shape[0], 1))
             # xyz = self.points + np.random.random(size=(self.points.shape[0], 3))
-
-
-            
             normals = self.normals
             xyz = self.points
-            # xyz = self.points[start_idx:end_idx, :]
-            # normals = self.normals[start_idx:end_idx, :]
             b = xyz.shape[0]
             gt_sdf = np.random.normal(0,0.05,size=(b, 1))
-            # gt_sdf = np.tile(gt_sdf,b)
-            # gt_sdf = np.reshape(gt_sdf,(-1,1))
             epsilonmat = np.tile(gt_sdf,3)
             xyz = np.tile(xyz,(1,1))
             normals_stacked = np.tile(normals,(1,1))

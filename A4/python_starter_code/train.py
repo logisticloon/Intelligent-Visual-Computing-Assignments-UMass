@@ -33,14 +33,10 @@ def train(dataset, model, optimizer, args):
         pred_sdf_tensor = torch.clamp(pred_sdf_tensor, -args.clamping_distance, args.clamping_distance)
         sdf_tensor = data['gt_sdf'].to(device)
         sdf_tensor = torch.clamp(sdf_tensor,-args.clamping_distance,args.clamping_distance)
-        # print(pred_sdf_tensor.shape,sdf_tensor.shape)
-        # lossfn = torch.nn.L1Loss(reduction='sum')
-        # loss = lossfn(pred_sdf_tensor,sdf_tensor)
         loss = torch.sum(torch.abs(pred_sdf_tensor-sdf_tensor))
         loss.backward()
         optimizer.step()
         loss_sum += loss.detach().item()
-        # loss_sum += 1. * xyz_tensor.shape[0]
         loss_count += xyz_tensor.shape[0]
         # ***********************************************************************
 
@@ -59,23 +55,12 @@ def val(dataset, model, optimizer, args):
         # **** YOU SHOULD ADD TRAINING CODE HERE, CURRENTLY IT IS INCORRECT ****
         with torch.no_grad():
             xyz_tensor = data['xyz'].to(device)
-            # loss_sum += 1. * xyz_tensor.shape[0]
-            # loss_count += xyz_tensor.shape[0]
-
-
             pred_sdf_tensor = model(xyz_tensor)
             pred_sdf_tensor = torch.clamp(pred_sdf_tensor, -args.clamping_distance, args.clamping_distance)
             sdf_tensor = data['gt_sdf'].to(device)
             sdf_tensor = torch.clamp(sdf_tensor,-args.clamping_distance,args.clamping_distance)
-            # print(pred_sdf_tensor.shape,sdf_tensor.shape)
-            # lossfn = torch.nn.L1Loss(reduction='sum')
-            # loss = lossfn(pred_sdf_tensor,sdf_tensor)
             loss = torch.sum(torch.abs(pred_sdf_tensor-sdf_tensor))
-
             loss_sum += loss.detach().item()
-            # loss.backward()
-            # optimizer.step()
-            # loss_sum += 1. * xyz_tensor.shape[0]
             loss_count += xyz_tensor.shape[0]
         # ***********************************************************************
 
